@@ -1,0 +1,27 @@
+name: Satellite map view regression
+on: [pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate inline JS and map controls
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm'),assert=require('assert');
+          const html=fs.readFileSync('index.html','utf8');
+          for(const id of ['map-sg','map-pb','map-world','singapore','pedra'])assert(html.includes('id="'+id+'"'),'missing '+id);
+          const scripts=html.split('<script>').slice(1).map(part=>part.split('</script>')[0]).filter(Boolean);
+          scripts.forEach(s=>new vm.Script(s));
+          assert(html.includes('function resetSatelliteMapView('));
+          assert(html.includes('map.invalidateSize({pan:false})'));
+          assert(html.includes("$('map-world').onclick=async()=>"),'Worldwide async loader must be retained');
+          assert(html.includes('function showAllSatellites()'));
+          assert(html.includes('satellite.propagate('));
+          console.log('Map controls, Worldwide loader, and satellite propagation preserved');
+          NODE
