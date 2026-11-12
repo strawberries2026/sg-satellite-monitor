@@ -16,7 +16,7 @@ jobs:
           const fs=require('fs'),vm=require('vm'),assert=require('assert');
           const html=fs.readFileSync('index.html','utf8');
           for(const id of ['map-sg','map-pb','map-world','singapore','pedra'])assert(html.includes('id="'+id+'"'),'missing '+id);
-          const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)].map(m=>m[1]).filter(Boolean);
+          const scripts=html.split('<script>').slice(1).map(part=>part.split('</script>')[0]).filter(Boolean);
           scripts.forEach(s=>new vm.Script(s));
           assert(html.includes('function resetSatelliteMapView('));
           assert(html.includes('map.invalidateSize({pan:false})'));
