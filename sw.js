@@ -1,5 +1,5 @@
 /* SG Satellite Monitor: network-first app shell, preserving orbital feed requests. */
-const CACHE='sg-satellite-shell-v22';
+const CACHE='sg-satellite-shell-v23';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.svg','./pwa-check.html'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(async cache=>{
