@@ -20,7 +20,9 @@ jobs:
           scripts.forEach(s=>new vm.Script(s));
           assert(html.includes('function resetSatelliteMapView('));
           assert(html.includes('map.invalidateSize({pan:false})'));
-          assert(html.includes("$('map-world').onclick=async()=>"),'Worldwide async loader must be retained');
+          assert(html.includes("$('map-world').onclick=async()=>"),'Worldwide button handler must be retained');
+          assert(html.includes("Worldwide geographic view available."),'Offline world view fallback must be available');
+          assert(html.includes("map.setView([0,0],1,{animate:false})"),'Worldwide view must reset even without orbital data');
           assert(html.includes('function showAllSatellites()'));
           assert(html.includes('satellite.propagate('));
           for(const label of ['NORTH AMERICA','SOUTH AMERICA','EUROPE','AFRICA','ASIA','AUSTRALIA','ANTARCTICA','Atlantic Ocean','Indian Ocean','Pacific Ocean'])assert(html.includes("['"+label+"',"),'Missing worldwide label '+label);
