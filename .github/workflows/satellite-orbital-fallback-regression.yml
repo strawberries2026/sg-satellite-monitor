@@ -1,0 +1,37 @@
+name: Satellite orbital fallback regression
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - '.github/workflows/satellite-orbital-fallback-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify fallback and health labels
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const assert = require('node:assert/strict');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const loadStart = html.indexOf('async function load()');
+          assert.ok(loadStart >= 0, 'Missing orbital load function');
+          const load = html.slice(loadStart);
+          const omm = load.indexOf("FORMAT=json");
+          const tle = load.indexOf("FORMAT=tle");
+          const error = load.indexOf("catch(error){ommError=");
+          assert.ok(omm >= 0 && error > omm && tle > error, 'TLE fallback must follow OMM failure handling');
+          assert.match(load, /if\(!out\.length\)\{source='TLE fallback'/, 'Fallback must run for empty or failed OMM');
+          assert.match(load, /OMM:.*TLE:/, 'Both-source failure must be reported');
+          for (const label of ['OMM data current','TLE backup active','Cached orbital data','Data unavailable']) {
+            assert.ok(html.includes(label), 'Missing health label: ' + label);
+          }
+          console.log('Orbital fallback structure and health labels verified.');
+          NODE
