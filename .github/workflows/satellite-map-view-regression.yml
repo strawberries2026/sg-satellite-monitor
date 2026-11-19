@@ -29,3 +29,39 @@ jobs:
           assert(html.includes('map.on(\'zoomend\',updateLabels)'),'World labels must update on zoom');
           console.log('Map controls, Worldwide loader, and satellite propagation preserved');
           NODE
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Test PB marker interaction in mobile browser
+        run: |
+          python3 -m http.server 8765 >/tmp/satellite-test-server.log 2>&1 &
+          node - <<'NODE'
+          const {chromium}=require('playwright');
+          const assert=require('node:assert/strict');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+              await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+              await page.waitForFunction(()=>!!document.querySelector('.leaflet-container'),{timeout:30000});
+              await page.locator('#map-sg').click();
+              await page.waitForTimeout(500);
+              const before=await page.locator('#map-visibility-note').innerText();
+              assert.match(before,/Singapore view selected/);
+              const marker=page.locator('.leaflet-marker-icon[title="Pedra Branca, Singapore reference point"]');
+              await marker.waitFor({timeout:15000});
+              await marker.click();
+              await page.waitForTimeout(350);
+              const after=await page.locator('#map-visibility-note').innerText();
+              assert.match(after,/Pedra Branca view selected/,'PB marker click did not run focus handler');
+              const popup=await page.locator('.leaflet-popup-content').allInnerTexts();
+              assert(popup.some(t=>t.includes('Pedra Branca')),'PB popup missing');
+              await page.locator('#map-world').click();
+              await page.waitForTimeout(300);
+              const worldNote=await page.locator('#map-visibility-note').innerText();
+              assert(!worldNote.includes('Pedra Branca view selected'),'Worldwide remained on PB');
+              console.log('Mobile PB marker click, popup, and Worldwide state passed');
+            } finally {await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
