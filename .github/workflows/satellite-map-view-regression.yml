@@ -53,6 +53,8 @@ jobs:
               await marker.waitFor({timeout:15000});
               await marker.click();
               await page.waitForTimeout(350);
+              const position=await page.evaluate(()=>{const m=window.__satelliteMapForTests;return {lat:m.getCenter().lat,lon:m.getCenter().lng,zoom:m.getZoom()}});
+              assert(Math.abs(position.lat-1.330)<0.02 && Math.abs(position.lon-104.406)<0.02 && position.zoom===9,'PB marker did not centre and zoom the actual Leaflet map: '+JSON.stringify(position));
               const after=await page.locator('#map-visibility-note').innerText();
               assert.match(after,/Pedra Branca view selected/,'PB marker click did not run focus handler');
               const popup=await page.locator('.leaflet-popup-content').allInnerTexts();
