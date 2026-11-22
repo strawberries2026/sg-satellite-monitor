@@ -23,7 +23,8 @@ jobs:
           assert(html.includes("$('map-world').onclick=async()=>"),'Worldwide handler retained');
           assert(html.includes('Worldwide geographic view available.'),'Offline fallback notice retained');
           assert(html.includes('map.setView([0,40],1,{animate:false})'),'World map reset independent of orbital feed');
-          assert(html.includes('autoPanPaddingBottomRight:[28,28]'),'PB popup must pan inside map viewport');
+          assert(html.includes("bindPopup('Pedra Branca, Singapore',{maxWidth:190,minWidth:140,autoPan:false})"),'PB popup must not auto-pan away from the selected centre');
+          assert(html.includes(".on('click',()=>{resetSatelliteMapView(1.330,104.406,9,'Pedra Branca');})"),'PB marker tap must centre at zoom 9');
           assert(html.includes('maxWidth:190,minWidth:140'),'PB popup width must be bounded');
           assert(html.includes('function showAllSatellites()'));
           assert(html.includes('satellite.propagate('));
